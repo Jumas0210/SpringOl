@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetails;
 import io.jsonwebtoken.Claims;
+import java.util.Date;
 
 import java.util.Optional;
 
@@ -37,28 +38,34 @@ public class MerchantsService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
 
-    public ResponseEntity<ApiResponse<Page<Merchants>>> obtenerComerciantes(String nombre, String estado, Pageable pageable) {
-        Page<Merchants> comerciantes = merchantsRepository.findByNombreRazonSocialContainingIgnoreCaseAndEstadoContainingIgnoreCase(nombre, estado, pageable);
-        return ResponseEntity.ok(new ApiResponse<>("success", "Lista de comerciantes obtenida", comerciantes));
+    public ResponseEntity<ApiResponse<Page<Merchants>>> getMerchants(String nombre, String estado, Pageable pageable) {
+        Page<Merchants> merchants = merchantsRepository.findByNombreRazonSocialContainingIgnoreCaseAndEstadoContainingIgnoreCase(nombre, estado, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("success", "Lista de comerciantes obtenida", merchants));
     }
 
-    public ResponseEntity<ApiResponse<Merchants>> obtenerComerciantePorId(Long id) {
-        Merchants comerciante = merchantsRepository.findById(id)
+    public ResponseEntity<ApiResponse<Merchants>> getMerchantById(Long id) {
+        Merchants merchants = merchantsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el comerciante con ID " + id));
-        return ResponseEntity.ok(new ApiResponse<>("success", "Comerciante encontrado", comerciante));
+        return ResponseEntity.ok(new ApiResponse<>("success", "Comerciante encontrado", merchants));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Merchants>> crearComerciante(@Valid Merchants comerciante) {
-        System.out.println("🔹 Entrando a crearComerciante()");  // 🔍 LOG PARA DEPURAR
-        comerciante.setUsuarioActualizacion(getUserAuthenticated());
+    public ResponseEntity<ApiResponse<Merchants>> createMerchant(@Valid Merchants comerciante) {
+        Integer userID = getUserAuthenticated();
+        System.out.println(userID);
+        comerciante.setUsuarioActualizacion(userID);
+        comerciante.setId(null);
+        
+        if (comerciante.getFechaRegistro() == null) {
+        comerciante.setFechaRegistro(new Date());
+    }
         
         Merchants nuevoComerciante = merchantsRepository.save(comerciante);
         return ResponseEntity.ok(new ApiResponse<>("success", "Comerciante creado con éxito", nuevoComerciante));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Merchants>> actualizarComerciante(Long id, @Valid Merchants detallesActualizados) {
+    public ResponseEntity<ApiResponse<Merchants>> updateMerchant(Long id, @Valid Merchants detallesActualizados) {
         Merchants comercianteExistente = merchantsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el comerciante con ID " + id));
 
@@ -75,26 +82,27 @@ public class MerchantsService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> cambiarEstadoComerciante(Long id, String estado) {
-        Merchants comerciante = merchantsRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el comerciante con ID " + id));
+    public ResponseEntity<ApiResponse<String>> toggleStateMerchant(Long id) {
+        Merchants merchants = merchantsRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("No se encontró el comerciante con ID " + id));
 
-        comerciante.setEstado(estado);
-        comerciante.setUsuarioActualizacion(getUserAuthenticated());
+    
+    String nuevoEstado = merchants.getEstado().equalsIgnoreCase("Activo") ? "Inactivo" : "Activo";
+    merchants.setEstado(nuevoEstado);
+    merchants.setUsuarioActualizacion(getUserAuthenticated());
 
-        merchantsRepository.save(comerciante);
+    merchantsRepository.save(merchants);
 
-        return ResponseEntity.ok(new ApiResponse<>("success", "Estado del comerciante actualizado", "Nuevo estado: " + estado));
+    return ResponseEntity.ok(new ApiResponse<>("success", "Estado del comerciante actualizado", "Nuevo estado: " + nuevoEstado));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> eliminarComerciante(Long id) {
+    public ResponseEntity<ApiResponse<String>> deleteMerchant(Long id) {
         merchantsRepository.deleteById(id);
         return ResponseEntity.ok(new ApiResponse<>("success", "Comerciante eliminado con éxito", null));
     }
 
     private Integer getUserAuthenticated() {
-    System.out.println("✅ Entrando a getUserAuthenticated()");
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -102,13 +110,12 @@ public class MerchantsService {
         throw new IllegalStateException("No hay usuario autenticado");
     }
 
-    // Verificar si el principal es una instancia de UserDetails (Spring Security)
+    
     if (authentication.getPrincipal() instanceof UserDetails userDetails) {
 
-        // Si usas una clase personalizada `User`, obtén el ID
+       
         if (userDetails instanceof User usuario) {
             Integer userId = usuario.getId();
-            System.out.println("🔹 ID Usuario autenticado: " + userId);
             return userId;
         }
     }

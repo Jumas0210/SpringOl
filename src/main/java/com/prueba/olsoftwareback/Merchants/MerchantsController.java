@@ -20,50 +20,48 @@ import lombok.RequiredArgsConstructor;
  *
  * @author Delatorre
  */
- import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+
 @RestController
 @RequestMapping("/api/v1/merchants")
 @RequiredArgsConstructor
 public class MerchantsController {
-    
+
     private final MerchantsService merchantsService;
-    
+
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<Merchants>>> obtenerComerciantes(
+    public ResponseEntity<ApiResponse<Page<Merchants>>> getMerchants(
             @RequestParam(required = false, defaultValue = "") String nombre,
             @RequestParam(required = false, defaultValue = "") String estado,
             Pageable pageable) {
-        return merchantsService.obtenerComerciantes(nombre, estado, pageable);
+        return merchantsService.getMerchants(nombre, estado, pageable);
     }
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Merchants>> obtenerComerciantePorId(@PathVariable Long id) {
-        return merchantsService.obtenerComerciantePorId(id);
+    public ResponseEntity<ApiResponse<Merchants>> getMerchantById(@PathVariable Long id) {
+        return merchantsService.getMerchantById(id);
     }
-    
-     @PostMapping
-    public ResponseEntity<ApiResponse<Merchants>> crearComerciante(@Valid @RequestBody Merchants comerciante) {
-         System.out.println("✅ Petición recibida en MerchantsController");
-        return merchantsService.crearComerciante(comerciante);
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<Merchants>> createMerchant(@Valid @RequestBody Merchants merchant) {
+        return merchantsService.createMerchant(merchant);
     }
-    
+
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Merchants>> actualizarComerciante(
+    public ResponseEntity<ApiResponse<Merchants>> updateMerchant(
             @PathVariable Long id,
-            @Valid @RequestBody Merchants comerciante) {
-        return merchantsService.actualizarComerciante(id, comerciante);
+            @Valid @RequestBody Merchants merchant) {
+        return merchantsService.updateMerchant(id, merchant);
     }
-    
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<ApiResponse<String>> cambiarEstadoComerciante(
-            @PathVariable Long id,
-            @RequestParam String estado) {
-        return merchantsService.cambiarEstadoComerciante(id, estado);
+
+    @PatchMapping("/{id}/toggle-state")
+    public ResponseEntity<ApiResponse<String>> toggleStateMerchant(@PathVariable Long id) {
+        return merchantsService.toggleStateMerchant(id);
     }
-    
-    @DeleteMapping("/{id}")    
-    public ResponseEntity<ApiResponse<String>> eliminarComerciante(@PathVariable Long id) {
-        return merchantsService.eliminarComerciante(id);
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteMerchant(@PathVariable Long id) {
+        return merchantsService.deleteMerchant(id);
     }
-    
+
 }

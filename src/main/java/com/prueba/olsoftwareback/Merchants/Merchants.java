@@ -22,6 +22,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class Merchants {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_COMERCIANTE")
     private Long id;  
 
@@ -55,6 +56,6 @@ public class Merchants {
     private Date fechaActualizacion;  
 
 
-    @Column(name = "USUARIO_ACTUALIZACION", nullable = true, insertable = false)
+    @Column(name = "USUARIO_ACTUALIZACION", nullable = false)
     private Integer usuarioActualizacion;  
 }

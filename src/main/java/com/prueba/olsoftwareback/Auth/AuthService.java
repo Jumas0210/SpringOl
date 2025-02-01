@@ -5,6 +5,7 @@
 package com.prueba.olsoftwareback.Auth;
 
 import com.prueba.olsoftwareback.Jwt.JwtService;
+import com.prueba.olsoftwareback.User.User;
 import com.prueba.olsoftwareback.User.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,8 +29,11 @@ public class AuthService {
     public AuthResponse login(LoginRequest request){
        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreoElectronico(),request.getContrasena()));
        UserDetails user = userRepository.findByCorreoElectronico(request.getCorreoElectronico()).orElseThrow();
+       User usuario = (User) user;
        String token = jwtService.getToken(user);
        return AuthResponse.builder()
+               .name(usuario.getNombre())
+               .rol(usuario.getId())
                .token(token)
                .build();
     }

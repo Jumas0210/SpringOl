@@ -22,20 +22,16 @@ import org.springframework.data.repository.query.Param;
 public interface  MerchantsRepository extends JpaRepository<Merchants, Long>{
     
     
-    // Buscar por ID (Spring JPA lo hace automático)
+    
     Optional<Merchants> findById(Long id);
 
-    // Buscar por ID con estado específico (Activo/Inactivo)
+
     Optional<Merchants> findByIdAndEstado(Long id, String estado);
 
-    // Consulta paginada con filtros opcionales
+
     Page<Merchants> findByNombreRazonSocialContainingIgnoreCaseAndEstadoContainingIgnoreCase(
             String nombreRazonSocial, String estado, Pageable pageable);
-    
-    @Query("SELECT u.id FROM User u WHERE u.correoElectronico = :correo")
-    Long obtenerIdUsuarioPorCorreo(@Param("correo") String correo);
 
-    // Actualizar solo el estado del comerciante con PATCH
     @Modifying
     @Transactional
     @Query("UPDATE Merchants c SET c.estado = :estado WHERE c.id = :id")
